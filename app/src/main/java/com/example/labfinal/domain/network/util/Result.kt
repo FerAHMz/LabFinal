@@ -1,4 +1,4 @@
-package com.example.labfinal.domain.network.util
+package com.example.prueba.domain.network.util
 
 /**
  * Puedes copiar y pegar esta clase.
@@ -11,7 +11,7 @@ package com.example.labfinal.domain.network.util
  * 2 clases que se llamen Error. Si la clase util.Error se llamara diferente,
  * esto no sería necesario.
  */
-import com.example.labfinal.domain.network.util.Error as UtilError
+import com.example.prueba.domain.network.util.Error as UtilError
 
 
 

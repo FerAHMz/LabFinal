@@ -1,2 +1,2 @@
-package com.example.labfinal.domain.network
+package com.example.prueba.domain.network
 

@@ -1,4 +1,4 @@
-package com.example.labfinal.domain.network.util
+package com.example.prueba.domain.network.util
 
 interface Error
 
