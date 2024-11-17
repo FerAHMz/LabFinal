@@ -1,4 +1,4 @@
-package com.example.prueba.presentation
+package com.example.labfinal.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -6,16 +6,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.prueba.presentation.list.AssetsScreen
-import com.example.prueba.presentation.profile.AssetDetailScreen
-import com.example.prueba.presentation.profile.AssetDetailViewModel
-import com.example.prueba.presentation.profile.AssetDetailViewModelFactory
-import com.example.prueba.di.ServiceLocator
+import com.example.labfinal.presentation.list.AssetsScreen
+import com.example.labfinal.presentation.profile.AssetDetailScreen
 
 sealed class Screen(val route: String) {
     object Assets : Screen("assets")
-    object AssetDetail : Screen("assetDetail/{assetId}") {
-        fun createRoute(assetId: String) = "assetDetail/$assetId"
+    data class AssetDetail(val assetId: String) : Screen("assetDetail/{assetId}") {
+        fun createRoute() = "assetDetail/$assetId"
     }
 }
 
@@ -30,24 +27,17 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(Screen.Assets.route) {
-            AssetsScreen(onAssetClick = { asset ->
-                navController.navigate(Screen.AssetDetail.createRoute(asset.id))
+            AssetsScreen(onAssetClick = { assetId ->
+                navController.navigate(Screen.AssetDetail(assetId).createRoute())
             })
         }
+
         composable(
-            route = Screen.AssetDetail.route,
+            route = Screen.AssetDetail("{assetId}").route,
             arguments = listOf(navArgument("assetId") { defaultValue = "" })
         ) { backStackEntry ->
-            val assetId = backStackEntry.arguments?.getString("assetId") ?: ""
-            val repository = ServiceLocator.provideCryptoRepository(navController.context)
-            val factory = AssetDetailViewModelFactory(repository, assetId)
-            val viewModel = androidx.lifecycle.ViewModelProvider(
-                navController.currentBackStackEntry!!,
-                factory
-            )[AssetDetailViewModel::class.java]
-
-            // Pasar el viewModel al AssetDetailScreen
-            AssetDetailScreen(viewModel = viewModel)
+            val assetId = backStackEntry.arguments?.getString("assetId").orEmpty()
+            AssetDetailScreen(assetId = assetId, navController = navController)
         }
     }
 }

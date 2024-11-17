@@ -1,10 +1,11 @@
-package com.example.prueba.data.mappers
+package com.example.labfinal.data.mappers
 
-import com.example.prueba.data.local.entity.AssetEntity
-import com.example.prueba.data.network.dto.AssetDto
-import com.example.prueba.data.network.dto.AssetDetailDto
-import com.example.prueba.domain.model.Asset
-import com.example.prueba.domain.model.AssetDetail
+import com.example.labfinal.data.local.entity.AssetDetailEntity
+import com.example.labfinal.data.local.entity.AssetEntity
+import com.example.labfinal.data.network.dto.AssetDto
+import com.example.labfinal.data.network.dto.AssetDetailDto
+import com.example.labfinal.domain.model.Asset
+import com.example.labfinal.domain.model.AssetDetail
 
 fun AssetDto.toDomainModel(): Asset {
     return Asset(
@@ -19,17 +20,18 @@ fun AssetDto.toDomainModel(): Asset {
 
 fun AssetDetailDto.toDomainModel(): AssetDetail {
     return AssetDetail(
-        id = id,
-        name = name,
-        symbol = symbol,
-        priceUsd = priceUsd,
-        changePercent24Hr = changePercent24Hr,
-        supply = supply,
-        maxSupply = maxSupply,
-        marketCapUsd = marketCapUsd,
-        lastUpdated = lastUpdated
+        id = this.id,
+        name = this.name,
+        symbol = this.symbol,
+        priceUsd = this.priceUsd,
+        changePercent24Hr = this.changePercent24Hr,
+        supply = this.supply,
+        maxSupply = this.maxSupply,
+        marketCapUsd = this.marketCapUsd,
+        lastUpdated = System.currentTimeMillis()
     )
 }
+
 
 fun Asset.toEntity(): AssetEntity {
     return AssetEntity(
@@ -69,3 +71,19 @@ fun AssetEntity.toAssetDetail(): AssetDetail {
         marketCapUsd = marketCapUsd
     )
 }
+
+fun AssetDetailEntity.toAssetDetail(): AssetDetail {
+    return AssetDetail(
+        id = this.id,
+        name = this.name,
+        symbol = this.symbol,
+        priceUsd = this.priceUsd,
+        changePercent24Hr = this.changePercent24Hr,
+        supply = this.supply,
+        maxSupply = this.maxSupply,
+        marketCapUsd = this.marketCapUsd,
+        lastUpdated = this.lastUpdated
+    )
+}
+
+

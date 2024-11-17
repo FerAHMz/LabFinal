@@ -1,9 +1,10 @@
-package com.example.prueba.presentation.profile
+package com.example.labfinal.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prueba.data.repository.CryptoRepository
-import com.example.prueba.domain.model.AssetDetail
+import com.example.labfinal.data.repository.CryptoRepository
+import com.example.labfinal.domain.model.AssetDetail
+import com.example.labfinal.domain.network.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -13,32 +14,32 @@ class AssetDetailViewModel(
     private val assetId: String
 ) : ViewModel() {
 
-    private val _assetDetail = MutableStateFlow<AssetDetail?>(null)
-    val assetDetail: StateFlow<AssetDetail?> = _assetDetail
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
+    private val _uiState = MutableStateFlow<UiState<AssetDetail>>(UiState.Loading)
+    val uiState: StateFlow<UiState<AssetDetail>> = _uiState
 
     init {
         fetchAssetDetails()
     }
 
-    private fun fetchAssetDetails() {
+    fun fetchAssetDetails() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
+            _uiState.value = UiState.Loading
             try {
-                val details = repository.getAssetDetailsOnline(assetId)
-                _assetDetail.value = details
+                val asset = repository.getAssetDetailsOnline(assetId)
+                _uiState.value = UiState.Success(asset)
             } catch (e: Exception) {
-                _errorMessage.value = "Error loading asset details. Showing offline data."
-                _assetDetail.value = repository.getAssetDetailsOffline(assetId)
-            } finally {
-                _isLoading.value = false
+                _uiState.value = UiState.Error("Error cargando datos. Mostrando datos offline si están disponibles.")
+                val offlineAsset = repository.getAssetDetailsOffline(assetId)
+                if (offlineAsset != null) {
+                    _uiState.value = UiState.Success(offlineAsset)
+                } else {
+                    _uiState.value = UiState.Error("No se encontraron datos offline para este asset.")
+                }
             }
         }
+    }
+
+    fun retryFetchingDetails() {
+        fetchAssetDetails()
     }
 }

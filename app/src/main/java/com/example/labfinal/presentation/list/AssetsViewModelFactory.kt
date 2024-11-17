@@ -1,8 +1,8 @@
-package com.example.prueba.presentation.list
+package com.example.labfinal.presentation.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.prueba.data.repository.CryptoRepository
+import com.example.labfinal.data.repository.CryptoRepository
 
 class AssetsViewModelFactory(
     private val repository: CryptoRepository

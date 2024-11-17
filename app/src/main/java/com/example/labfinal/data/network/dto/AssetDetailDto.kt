@@ -1,4 +1,4 @@
-package com.example.prueba.data.network.dto
+package com.example.labfinal.data.network.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,8 +10,9 @@ data class AssetDetailDto(
     val symbol: String,
     @SerialName("priceUsd") val priceUsd: Double,
     @SerialName("changePercent24Hr") val changePercent24Hr: Double,
-    val supply: Double,
+    val supply: Double?,
     @SerialName("maxSupply") val maxSupply: Double?,
-    @SerialName("marketCapUsd") val marketCapUsd: Double,
+    @SerialName("marketCapUsd") val marketCapUsd: Double?,
     @SerialName("lastUpdated") val lastUpdated: Long
 )
+

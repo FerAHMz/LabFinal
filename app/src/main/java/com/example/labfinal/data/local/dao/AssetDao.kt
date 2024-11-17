@@ -1,10 +1,10 @@
-package com.example.prueba.data.local.dao
+package com.example.labfinal.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.prueba.data.local.entity.AssetEntity
+import com.example.labfinal.data.local.entity.AssetEntity
 
 @Dao
 interface AssetDao {

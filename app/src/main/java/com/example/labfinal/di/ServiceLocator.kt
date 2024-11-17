@@ -1,10 +1,10 @@
-package com.example.prueba.di
+package com.example.labfinal.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.prueba.data.local.CryptoDatabase
-import com.example.prueba.data.network.Api
-import com.example.prueba.data.repository.CryptoRepository
+import com.example.labfinal.data.local.CryptoDatabase
+import com.example.labfinal.data.network.Api
+import com.example.labfinal.data.repository.CryptoRepository
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -20,10 +20,20 @@ object ServiceLocator {
                 json(Json {
                     ignoreUnknownKeys = true
                     isLenient = true
+                    prettyPrint = false
                 })
             }
+
             install(Logging) {
-                level = LogLevel.BODY
+                level = LogLevel.ALL
+            }
+
+            engine {
+                requestTimeout = 10_000L
+                endpoint {
+                    connectTimeout = 10_000
+                    socketTimeout = 10_000
+                }
             }
         }
     }
@@ -37,7 +47,8 @@ object ServiceLocator {
                 context.applicationContext,
                 CryptoDatabase::class.java,
                 "crypto_database"
-            ).build()
+            ).fallbackToDestructiveMigration()
+                .build()
             database = instance
             instance
         }

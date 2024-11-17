@@ -1,4 +1,4 @@
-package com.example.prueba.domain.model
+package com.example.labfinal.domain.model
 
 data class AssetDetail(
     val id: String,
@@ -6,8 +6,8 @@ data class AssetDetail(
     val symbol: String,
     val priceUsd: Double,
     val changePercent24Hr: Double,
-    val lastUpdated: Long,
-    val supply: Double? = null,
-    val maxSupply: Double? = null,
-    val marketCapUsd: Double? = null
+    val supply: Double?,
+    val maxSupply: Double?,
+    val marketCapUsd: Double?,
+    val lastUpdated: Long
 )

@@ -1,8 +1,8 @@
-package com.example.prueba.data.local.entity
+package com.example.labfinal.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.prueba.domain.model.Asset
+import com.example.labfinal.domain.model.Asset
 
 @Entity(tableName = "assets")
 data class AssetEntity(
@@ -16,14 +16,3 @@ data class AssetEntity(
     val maxSupply: Double?,
     val marketCapUsd: Double?
 )
-
-fun AssetEntity.toDomainModel(): Asset {
-    return Asset(
-        id = id,
-        name = name,
-        symbol = symbol,
-        priceUsd = priceUsd,
-        changePercent24Hr = changePercent24Hr,
-        lastUpdated = lastUpdated
-    )
-}

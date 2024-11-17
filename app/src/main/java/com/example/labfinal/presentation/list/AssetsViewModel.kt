@@ -1,48 +1,46 @@
-package com.example.prueba.presentation.list
+package com.example.labfinal.presentation.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prueba.data.repository.CryptoRepository
-import com.example.prueba.domain.model.Asset
+import com.example.labfinal.data.repository.CryptoRepository
+import com.example.labfinal.domain.model.Asset
+import com.example.labfinal.domain.network.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class AssetsViewModel(private val repository: CryptoRepository) : ViewModel() {
 
-    private val _assets = MutableStateFlow<List<Asset>>(emptyList())
-    val assets: StateFlow<List<Asset>> = _assets
+    private val _uiState = MutableStateFlow<UiState<List<Asset>>>(UiState.Loading)
+    val uiState: StateFlow<UiState<List<Asset>>> = _uiState
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
-
-    private val _lastUpdated = MutableStateFlow<String?>(null)
+    private val _lastUpdated = MutableStateFlow<String?>("No disponible")
     val lastUpdated: StateFlow<String?> = _lastUpdated
 
     init {
         fetchAssets()
     }
 
-    private fun fetchAssets() {
+    fun fetchAssets() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
+            _uiState.value = UiState.Loading
             try {
-                val assets = repository.getAssetsOnline()
-                _assets.value = assets
-                _lastUpdated.value = getCurrentDateTime()
-            } catch (e: Exception) {
-                _errorMessage.value = "Error loading assets. Showing offline data."
-                val assets = repository.getAssetsOffline()
-                _assets.value = assets
+                val onlineAssets = repository.getAssetsOnline()
+                _uiState.value = UiState.Success(onlineAssets)
                 _lastUpdated.value = repository.getLastUpdatedDate()
-            } finally {
-                _isLoading.value = false
+                repository.saveAssetsOffline(onlineAssets)
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("Error cargando datos en línea. Mostrando datos offline si están disponibles.")
+                val offlineAssets = repository.getAssetsOffline()
+                if (offlineAssets.isEmpty()) {
+                    _uiState.value = UiState.Error("No hay datos offline disponibles.")
+                } else {
+                    _uiState.value = UiState.Success(offlineAssets)
+                    _lastUpdated.value = "Última actualización offline: ${getCurrentDateTime()}"
+                }
             }
         }
     }
@@ -50,10 +48,11 @@ class AssetsViewModel(private val repository: CryptoRepository) : ViewModel() {
     fun saveDataForOffline() {
         viewModelScope.launch {
             try {
-                repository.saveAssetsOffline(_assets.value)
-                _lastUpdated.value = getCurrentDateTime()
+                val currentAssets = (_uiState.value as? UiState.Success)?.data ?: emptyList()
+                repository.saveAssetsOffline(currentAssets)
+                _lastUpdated.value = "Guardado para uso offline: ${getCurrentDateTime()}"
             } catch (e: Exception) {
-                _errorMessage.value = "Error saving data for offline use."
+                _uiState.value = UiState.Error("Error guardando datos offline: ${e.message}")
             }
         }
     }

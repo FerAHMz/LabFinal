@@ -1,55 +1,68 @@
-package com.example.prueba.data.repository
+package com.example.labfinal.data.repository
 
-import com.example.prueba.data.local.dao.AssetDao
-import com.example.prueba.data.mappers.toDomainModel
-import com.example.prueba.data.mappers.toEntity
-import com.example.prueba.data.mappers.toAssetDetail  // Asegúrate de tener esta importación
-import com.example.prueba.data.network.Api
-import com.example.prueba.domain.model.Asset
-import com.example.prueba.domain.model.AssetDetail
+import com.example.labfinal.data.local.dao.AssetDao
+import com.example.labfinal.data.mappers.toDomainModel
+import com.example.labfinal.data.mappers.toEntity
+import com.example.labfinal.data.mappers.toAssetDetail
+import com.example.labfinal.data.network.Api
+import com.example.labfinal.domain.model.Asset
+import com.example.labfinal.domain.model.AssetDetail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
 
 class CryptoRepository(
     private val api: Api,
     private val assetDao: AssetDao
 ) {
+
     suspend fun getAssetsOnline(): List<Asset> {
-        val assetsDto = withContext(Dispatchers.IO) {
-            api.getAssets()
+        return withContext(Dispatchers.IO) {
+            try {
+                val assetsDto = api.getAssets()
+                assetsDto.map { it.toDomainModel() }
+            } catch (e: Exception) {
+                throw Exception("Error al obtener datos online: ${e.localizedMessage}")
+            }
         }
-        return assetsDto.map { it.toDomainModel() }
     }
 
     suspend fun getAssetsOffline(): List<Asset> {
-        val assetsEntity = withContext(Dispatchers.IO) {
-            assetDao.getAllAssets()
+        return withContext(Dispatchers.IO) {
+            val assetsEntity = assetDao.getAllAssets()
+            assetsEntity.map { it.toDomainModel() }
         }
-        return assetsEntity.map { it.toDomainModel() }
     }
 
     fun getLastUpdatedDate(): String {
-        return "Última actualización: ${System.currentTimeMillis()}"
+        val currentTimeMillis = System.currentTimeMillis()
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        return "Última actualización: ${formatter.format(Date(currentTimeMillis))}"
     }
 
     suspend fun saveAssetsOffline(assets: List<Asset>) {
-        val assetsEntity = assets.map { it.toEntity() }
         withContext(Dispatchers.IO) {
+            val assetsEntity = assets.map { it.toEntity() }
             assetDao.insertAll(assetsEntity)
         }
     }
 
     suspend fun getAssetDetailsOnline(assetId: String): AssetDetail {
-        val assetDetailDto = withContext(Dispatchers.IO) {
-            api.getAssetDetails(assetId)
+        return withContext(Dispatchers.IO) {
+            try {
+                val assetDetailDto = api.getAssetDetails(assetId)
+                assetDetailDto.toDomainModel()
+            } catch (e: Exception) {
+                throw Exception("Error al obtener detalles del asset online: ${e.localizedMessage}")
+            }
         }
-        return assetDetailDto.toDomainModel()
     }
 
     suspend fun getAssetDetailsOffline(assetId: String): AssetDetail? {
-        val assetEntity = withContext(Dispatchers.IO) {
-            assetDao.getAssetById(assetId)
+        return withContext(Dispatchers.IO) {
+            val assetEntity = assetDao.getAssetById(assetId)
+            assetEntity?.toAssetDetail()
         }
-        return assetEntity?.toAssetDetail()
     }
 }

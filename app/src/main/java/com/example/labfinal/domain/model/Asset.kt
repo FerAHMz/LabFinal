@@ -1,4 +1,4 @@
-package com.example.prueba.domain.model
+package com.example.labfinal.domain.model
 
 data class Asset(
     val id: String,

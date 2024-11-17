@@ -1,6 +1,7 @@
-package com.example.prueba.presentation.list
+package com.example.labfinal.presentation.list
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,9 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.rememberAsyncImagePainter
-import com.example.prueba.domain.model.Asset
-import com.example.prueba.di.ServiceLocator
+import coil.compose.rememberAsyncImagePainter
+import com.example.labfinal.domain.model.Asset
+import com.example.labfinal.di.ServiceLocator
+import com.example.labfinal.domain.network.util.UiState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -23,45 +25,75 @@ fun AssetsScreen(
     onAssetClick: (String) -> Unit,
     viewModel: AssetsViewModel = viewModel(factory = AssetsViewModelFactory(ServiceLocator.provideCryptoRepository(LocalContext.current)))
 ) {
-    val assets by viewModel.assets.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    viewModel.saveDataForOffline()
-                }
-            },
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .align(Alignment.End)
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            Text("Guardar Offline")
-        }
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        try {
+                            viewModel.saveDataForOffline()
+                            snackbarHostState.showSnackbar("Datos guardados offline.")
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar("Error al guardar datos offline.")
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(16.dp)
+            ) {
+                Text("Guardar Offline")
+            }
 
-        lastUpdated?.let {
-            Text(
-                text = "Última actualización: $it",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-            )
-        }
+            lastUpdated?.let {
+                Text(
+                    text = "Última actualización: $it",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                )
+            }
 
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        }
-        errorMessage?.let {
-            Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
-        }
+            when (uiState) {
+                is UiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(assets) { asset ->
-                AssetItem(asset = asset, onClick = { onAssetClick(asset.id) })  // Navegamos usando el ID del activo
+                is UiState.Success -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items((uiState as UiState.Success<List<Asset>>).data) { asset ->
+                            AssetItem(asset = asset, onClick = { onAssetClick(asset.id) })
+                        }
+                    }
+                }
+
+                is UiState.Error -> {
+                    val errorMessage = (uiState as UiState.Error).message
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
     }
@@ -102,14 +134,14 @@ fun AssetItem(
         }
 
         Text(
-            text = "$${asset.priceUsd}",
+            text = "$${"%.2f".format(asset.priceUsd)}",
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(end = 8.dp)
         )
 
         val changeColor = if (asset.changePercent24Hr >= 0) Color.Green else Color.Red
         Text(
-            text = "${asset.changePercent24Hr}%",
+            text = "${"%.2f".format(asset.changePercent24Hr)}%",
             color = changeColor,
             style = MaterialTheme.typography.bodySmall
         )
